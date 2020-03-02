@@ -12,11 +12,12 @@ public class FiniteStateMachine
 
     private List<State> states;
 
-    private Dictionary<State, List<Transition>> transitionMap;
+    private Dictionary<State, List<TransitionStatePair>> transitionMap;
 
     public FiniteStateMachine()
     {
         states = new List<State>();
+        transitionMap = new Dictionary<State, List<TransitionStatePair>>();
     }
 
     public State AddState(bool isFirstState = false)
@@ -28,6 +29,15 @@ public class FiniteStateMachine
             current = state;
 
         return state;
+    }
+
+    public void AddTransition(State from, State to, Func<bool> condition)
+    {
+        Transition transition = new Transition(condition);
+        TransitionStatePair pair = new TransitionStatePair(transition, to);
+        if (!transitionMap.ContainsKey(from))
+            transitionMap.Add(from, new List<TransitionStatePair>());
+        transitionMap[from].Add(pair);
     }
 
     public void Start()
@@ -44,5 +54,19 @@ public class FiniteStateMachine
             return;
 
         current.Update();
+
+        if (!transitionMap.ContainsKey(current))
+            return;
+
+        List<TransitionStatePair> pairList = transitionMap[current];
+        int length = pairList.Count;
+        for (int i = 0; i < length; ++i)
+        {
+            if (pairList[i].Key.CheckCondition())
+            {
+                current = pairList[i].Value;
+                break;
+            }
+        }
     }
 }

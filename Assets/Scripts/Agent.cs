@@ -121,12 +121,21 @@ public class Agent : MonoBehaviour
         wanderingState.OnUpdate += Wander;
 
         State detectingState = fsm.AddState();
+        detectingState.OnEnter += () => { isDetecting = false; };
         detectingState.OnUpdate += Detecting;
 
         State targetingState = fsm.AddState();
+        targetingState.OnUpdate += Target;
 
         State scaredState = fsm.AddState();
         scaredState.OnUpdate += Flee;
+
+        fsm.AddTransition(wanderingState, detectingState, () => { return isDetecting; });
+        fsm.AddTransition(detectingState, targetingState, () => { return (detectionTimer >= detectionDuration); });
+        fsm.AddTransition(wanderingState, scaredState, () => { return isScare; });
+        fsm.AddTransition(targetingState, scaredState, () => { return isScare; });
+        fsm.AddTransition(scaredState, wanderingState, () => { return !isScare && isWandering; });
+        fsm.AddTransition(scaredState, targetingState, () => { return !isScare && !isWandering; });
 
         fsm.Start();
     }
@@ -135,41 +144,18 @@ public class Agent : MonoBehaviour
     {
         transform.LookAt(interestSource);
         detectionTimer += Time.deltaTime;
-        if (detectionTimer >= detectionDuration)
-            isDetecting = false;
     }
 
     private void Target()
     {
-        /*FollowFlowFieldPath();
+        FollowFlowFieldPath();
         Seek();
-        Flock(agents);*/
+       // Flock(agents);
     }
 
     public void Compute(List<Agent> agents)
     {
-         if (isScare)
-         {
-             Flee();
-         }
-         else if (isWandering)
-             Wander();
-         else if (isDetecting)
-         {
-             transform.LookAt(interestSource);
-             detectionTimer += Time.deltaTime;
-             if (detectionTimer >= detectionDuration)
-             {
-                 isDetecting = false;
-             }
-         }
-         else
-         {
-             FollowFlowFieldPath();
-             Seek();
-             Flock(agents);
-         }
-        //fsm.Execute();
+        fsm.Execute();
         velocity.y = 0f;
         transform.position += velocity * Time.deltaTime;
         if (!isDetecting)

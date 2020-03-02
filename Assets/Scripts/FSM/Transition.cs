@@ -7,14 +7,10 @@ using UnityEngine;
 
 public class Transition
 {
-    State from;
-    State to;
     private Func<bool> conditionFunction;
 
-    public Transition(State inFrom, State inTo, Func<bool> inConditionFunction)
+    public Transition(Func<bool> inConditionFunction)
     {
-        from = inFrom;
-        to = inTo;
         conditionFunction = inConditionFunction;
     }
 
