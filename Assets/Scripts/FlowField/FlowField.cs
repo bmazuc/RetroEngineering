@@ -3,7 +3,6 @@ using System.Collections.Generic;
 //using System.Threading;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshRenderer))]
 public class FlowField : MonoBehaviour
 {
     private static FlowField instance;
@@ -18,12 +17,13 @@ public class FlowField : MonoBehaviour
         }
     }
 
+    [SerializeField] private MeshRenderer ground;
+
     [SerializeField] private Grid grid;
     public Grid Grid { get { return grid; } }
     [SerializeField] private Vector3 goal;
    // Thread thread = null;
 
-    private MeshRenderer navigationStatic;
     Queue<Cell> queue;
     List<Vector3> obstacles = new List<Vector3>();
 
@@ -44,8 +44,7 @@ public class FlowField : MonoBehaviour
     {
         queue = new Queue<Cell>();
 
-        navigationStatic = GetComponent<MeshRenderer>();
-        grid.Init(navigationStatic.bounds.size, navigationStatic.bounds.center - navigationStatic.bounds.extents);
+        grid.Init(ground.bounds.size, ground.bounds.center - ground.bounds.extents);
         grid.Generate();
         GenerateObstacle();
         //ThreadStart threadStart = new ThreadStart(Generate);
@@ -66,7 +65,7 @@ public class FlowField : MonoBehaviour
 
     void Generate()
     {
-        GenerateHeatMap();
+        GenerateCostMap();
         GenerateVectorField();
     }
 
@@ -76,12 +75,12 @@ public class FlowField : MonoBehaviour
         for (int i = 0; i < length; ++i)
         {
             Cell cell = grid.GetCellFromWorld(obstacles[i]);
-            if (cell != null) cell.unpassable = true;
+            if (cell != null) cell.unpassable = true;         
         }
     }
 
     //wavefront algorithm
-    private void GenerateHeatMap()
+    private void GenerateCostMap()
     {
         goalCell = grid.GetCellFromWorld(goal);
         goalCell.distance = 0;
@@ -93,7 +92,7 @@ public class FlowField : MonoBehaviour
             current = queue.Dequeue();
             if (current.unpassable)
                 continue;
-            Cell[] neighbours = grid.GetNeumannNeighbours(current);
+            Cell[] neighbours = grid.GetNeighbours(current);
             for (int i = 0; i < 4; ++i)
             {
                 Cell currentNeighbour = neighbours[i];
@@ -115,7 +114,7 @@ public class FlowField : MonoBehaviour
             Cell current = grid.cells[i];
             if (current.unpassable)
                 continue;
-            Cell[] neighbours = grid.GetNeumannNeighbours(current);
+            Cell[] neighbours = grid.GetNeighbours(current);
 
             float up = (neighbours[0] != null && !neighbours[0].unpassable) ? neighbours[0].distance : current.distance;
             float right = (neighbours[1] != null && !neighbours[1].unpassable) ? neighbours[1].distance : current.distance;

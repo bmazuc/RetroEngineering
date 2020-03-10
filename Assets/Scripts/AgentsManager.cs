@@ -8,12 +8,12 @@ public class AgentsManager : MonoBehaviour
     [SerializeField] private int agentCount = 10;
     [SerializeField] private float spawnRadius = 2f;
 
-    [SerializeField] AgentSettings agentSettings;
-    [SerializeField] private Color color = Color.white;
+    [SerializeField] SwarmBrain swarmBrain;
+    [SerializeField] private Color boundColor = Color.white;
+    [SerializeField] private Color radiusColor = Color.red;
+    [SerializeField] private bool drawGizmos = false;
     Vector3 spawnposition;
     List<Agent> agents = new List<Agent>();
-
-    [SerializeField] private Transform target;
 
     private delegate void DebugDelegate();
     private DebugDelegate OnGetTarget;
@@ -21,20 +21,28 @@ public class AgentsManager : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = color;
-        Gizmos.DrawCube(transform.position, (agentSettings.worldExtents - transform.position) * 2f);
+        if (!drawGizmos)
+            return;
+
+        Gizmos.color = boundColor;
+        Gizmos.DrawCube(transform.position, swarmBrain.worldExtents * 2f);
+        Gizmos.color = radiusColor;
+        Gizmos.DrawWireSphere(transform.position, spawnRadius);
     }
 
     void Start()
     {
+        swarmBrain.flowField = FlowField.Instance;
+
         for (int i = 0; i < agentCount; ++i)
         {
             spawnposition = transform.position + (Random.insideUnitSphere * spawnRadius);
             spawnposition.y = 0.15f;
             Agent agent = Instantiate(agentPrefab, spawnposition, Quaternion.identity).GetComponent<Agent>();
             agent.transform.parent = transform;
-            agent.Settings = agentSettings;
-            agent.interestSource = target.transform;
+            agent.Brain = swarmBrain;
+            swarmBrain.agents = agents;
+            agent.interestSource = swarmBrain.target.transform;
             OnDetectTarget += agent.Detect;
             OnGetTarget += agent.SwitchIsWandering;
             agents.Add(agent);
@@ -43,16 +51,19 @@ public class AgentsManager : MonoBehaviour
 
     private void Update()
     {
+        int agentCount = agents.Count;
+
         if (Input.GetKeyDown(KeyCode.T))
-            FlowField.Instance.GeneratePathTo(target.position);
+            FlowField.Instance.GeneratePathTo(swarmBrain.target.position);
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            FlowField.Instance.GeneratePathTo(target.position);
-            OnDetectTarget?.Invoke();
+            FlowField.Instance.GeneratePathTo(swarmBrain.target.position);       
+            for (int i = 0; i < agentCount; ++i)
+                agents[i].Detect();
         }
 
         for (int i = 0; i < agentCount; ++i)
-            agents[i].Compute(agents);
+            agents[i].Compute();
     }
 }

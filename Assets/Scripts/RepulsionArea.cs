@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(SphereCollider))]
+[RequireComponent(typeof(Collider))]
 public class RepulsionArea : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)

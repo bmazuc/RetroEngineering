@@ -77,7 +77,7 @@ public class Grid
         return cells[idx];
     }
 
-    public Cell[] GetNeumannNeighbours(Cell current)
+    public Cell[] GetNeighbours(Cell current)
     {
         Cell[] result = new Cell[4];
 

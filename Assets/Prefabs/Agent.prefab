@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5930998246591333801}
   - component: {fileID: 3337501881330130921}
   - component: {fileID: 3409568949495639872}
-  - component: {fileID: -3462627573374140302}
+  - component: {fileID: 8703863400869406735}
   m_Layer: 0
   m_Name: Agent
   m_TagString: Agent
@@ -92,36 +92,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3e89cdc759851b4e97aa1713f9c7a06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settings:
+  brain:
     target: {fileID: 0}
-    separation:
-      steer: {x: 0, y: 0, z: 0}
-      neighbour: 0
-      radius: 0
-      weight: 0
-    cohesion:
-      steer: {x: 0, y: 0, z: 0}
-      neighbour: 0
-      radius: 0
-      weight: 0
+    flowField: {fileID: 0}
+    agents: []
+    worldExtents: {x: 5, y: 5, z: 5}
+  maxSpeed: 1
+  maxForce: 1
+  wander:
+    weight: 1
+    circleDistance: 1
+    circleRadius: 5
+    wanderAngle: 0
+    angleChange: 15
+  flowFieldPathfinder:
+    weight: 3
+  flee:
+    weight: 8
+  seek:
+    weight: 0
+  flock:
+    weight: 1
     alignment:
-      steer: {x: 0, y: 0, z: 0}
-      neighbour: 0
-      radius: 0
-      weight: 0
-    maxSpeed: 0
-    maxForce: 0
-    mass: 0
-    stopRadius: 0
-    seekWeight: 0
-    fleeWeight: 0
-    worldExtents: {x: 0, y: 0, z: 0}
-  circleDistance: 2
-  circleRadius: 1
-  wanderAngle: 0
-  angleChange: 15
-  wanderWeight: 1
-  flowFieldWeight: 1
+      weight: 1
+      radius: 2.5
+    cohesion:
+      weight: 1
+      radius: 2.5
+    separation:
+      weight: 1
+      radius: 1
+  interestSource: {fileID: 0}
+  detectionDuration: 2
 --- !u!65 &3409568949495639872
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -130,12 +132,12 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 603964697189215533}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!54 &-3462627573374140302
+--- !u!54 &8703863400869406735
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
