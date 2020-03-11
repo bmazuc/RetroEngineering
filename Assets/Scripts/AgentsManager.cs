@@ -33,6 +33,7 @@ public class AgentsManager : MonoBehaviour
     void Start()
     {
         swarmBrain.flowField = FlowField.Instance;
+        swarmBrain.worldCenter = transform.position;
 
         for (int i = 0; i < agentCount; ++i)
         {
@@ -42,8 +43,9 @@ public class AgentsManager : MonoBehaviour
             agent.transform.parent = transform;
             agent.Brain = swarmBrain;
             swarmBrain.agents = agents;
+            
             agent.interestSource = swarmBrain.target.transform;
-            OnDetectTarget += agent.Detect;
+            OnDetectTarget += agent.Act;
             OnGetTarget += agent.SwitchIsWandering;
             agents.Add(agent);
         }
@@ -58,9 +60,10 @@ public class AgentsManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            FlowField.Instance.GeneratePathTo(swarmBrain.target.position);       
             for (int i = 0; i < agentCount; ++i)
-                agents[i].Detect();
+                agents[i].Act();
+
+            FlowField.Instance.GeneratePathTo(swarmBrain.target.position);
         }
 
         for (int i = 0; i < agentCount; ++i)

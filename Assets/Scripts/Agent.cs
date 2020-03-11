@@ -32,15 +32,16 @@ public class Agent : MonoBehaviour
     [SerializeField] private float maxForce;
     public float MaxForce { get { return maxForce; } }
 
-    bool isWandering = true;
-
     private enum States
     {
         Wandering,
-        Detecting,
         Targeting,
-        Scared
+        Return,
+
+        Max
     }
+
+    States state = States.Wandering;
 
     [SerializeField] private Behaviours.Wander wander;
     [SerializeField] private Behaviours.FlowFieldPathfinder flowFieldPathfinder;
@@ -59,10 +60,26 @@ public class Agent : MonoBehaviour
 
     FiniteStateMachine fsm;
 
-    public void Detect()
+    Animator animator;
+    int detectingHashCode;
+
+    public void Act()
     {
+        state = (States)((int)++state % (int)States.Max);
+
+        if (state == States.Return)
+            brain.target = brain.agentManager;
+
+        if (state != States.Targeting)
+            return;
+
+        Detect();
+    }
+
+    private void Detect()
+    {
+        brain.target = brain.Character;
         isDetecting = true;
-        isWandering = false;
         velocity = Vector3.zero;
         acceleration = Vector3.zero;
         detectionTimer = 0f;
@@ -70,7 +87,7 @@ public class Agent : MonoBehaviour
 
     public void SwitchIsWandering()
     {
-        isWandering = !isWandering;
+        state = (States)((int)++state % (int)States.Max);
     }
 
     public void Scare(Transform inFearSource)
@@ -86,6 +103,8 @@ public class Agent : MonoBehaviour
 
     void Start()
     {
+        animator = GetComponent<Animator>();
+        detectingHashCode = Animator.StringToHash("Detecting");
         wander.Owner = this;
         flowFieldPathfinder.Owner = this;
         flee.Owner = this;
@@ -100,9 +119,12 @@ public class Agent : MonoBehaviour
 
         State wanderingState = fsm.AddState(true);
         wanderingState.OnUpdate += wander.Execute;
+        wanderingState.OnUpdate += CheckWordBound;
 
         State detectingState = fsm.AddState();
         detectingState.OnEnter += () => { isDetecting = false; };
+        detectingState.OnEnter += () => {  animator.SetBool(detectingHashCode, true); };
+        detectingState.OnExit += () => { animator.SetBool(detectingHashCode, false); };
         detectingState.OnUpdate += Detecting;
 
         State targetingState = fsm.AddState();
@@ -110,15 +132,23 @@ public class Agent : MonoBehaviour
         //targetingState.OnUpdate += seek.Execute;
         targetingState.OnUpdate += flock.Execute;
 
+        State returnState = fsm.AddState();
+        returnState.OnUpdate += flowFieldPathfinder.Execute;
+        returnState.OnUpdate += flock.Execute;
+
         State scaredState = fsm.AddState();
         scaredState.OnUpdate += flee.Execute;
 
         fsm.AddTransition(wanderingState, detectingState, () => { return isDetecting; });
         fsm.AddTransition(detectingState, targetingState, () => { return (detectionTimer >= detectionDuration); });
         fsm.AddTransition(wanderingState, scaredState, () => { return isScare; });
+        fsm.AddTransition(returnState, scaredState, () => { return isScare; });
         fsm.AddTransition(targetingState, scaredState, () => { return isScare; });
-        fsm.AddTransition(scaredState, wanderingState, () => { return !isScare && isWandering; });
-        fsm.AddTransition(scaredState, targetingState, () => { return !isScare && !isWandering; });
+        fsm.AddTransition(targetingState, returnState, () => { return state == States.Return; });
+        fsm.AddTransition(returnState, wanderingState, () => { return (brain.target.transform.position - transform.position).magnitude <= 0.5f; });
+        fsm.AddTransition(scaredState, wanderingState, () => { return !isScare && state == States.Wandering; });
+        fsm.AddTransition(scaredState, targetingState, () => { return !isScare && state == States.Targeting; });
+        fsm.AddTransition(scaredState, returnState, () => { return !isScare && state == States.Return; });
 
         fsm.Start();
     }
@@ -132,6 +162,7 @@ public class Agent : MonoBehaviour
     public void Compute()
     {
         fsm.Execute();
+
         velocity.y = 0f;
         transform.position += velocity * Time.deltaTime;
         if (!isDetecting)
@@ -139,8 +170,6 @@ public class Agent : MonoBehaviour
 
         velocity += acceleration * Time.deltaTime;
         velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
-
-        CheckWordBound();
 
         acceleration *= 0f;
     }
@@ -154,13 +183,13 @@ public class Agent : MonoBehaviour
     public void CheckWordBound()
     {
         Vector3 position = transform.position;
-        if (position.x > brain.worldExtents.x || position.x < -brain.worldExtents.x)
+        if (position.x > brain.worldCenter.x + brain.worldExtents.x || position.x < brain.worldCenter.x - brain.worldExtents.x)
             velocity.x *= -1f;
 
-        if (position.y > brain.worldExtents.y || position.y < -brain.worldExtents.y)
+        if (position.y > brain.worldCenter.y + brain.worldExtents.y || position.y < brain.worldCenter.y - brain.worldExtents.y)
             velocity.y *= -1f;
 
-        if (position.z > brain.worldExtents.z || position.z < -brain.worldExtents.z)
+        if (position.z > brain.worldCenter.z + brain.worldExtents.z || position.z < brain.worldCenter.z - brain.worldExtents.z)
             velocity.z *= -1f;
     }
 }

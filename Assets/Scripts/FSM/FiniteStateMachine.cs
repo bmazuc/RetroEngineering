@@ -64,7 +64,9 @@ public class FiniteStateMachine
         {
             if (pairList[i].Key.CheckCondition())
             {
+                current.Exit();
                 current = pairList[i].Value;
+                current.Enter();
                 break;
             }
         }
