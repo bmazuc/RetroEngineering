@@ -19,6 +19,8 @@ public class AgentsManager : MonoBehaviour
     private DebugDelegate OnGetTarget;
     private DebugDelegate OnDetectTarget;
 
+    [SerializeField] private Character character;
+
     private void OnDrawGizmos()
     {
         if (!drawGizmos)
@@ -34,6 +36,8 @@ public class AgentsManager : MonoBehaviour
     {
         swarmBrain.flowField = FlowField.Instance;
         swarmBrain.worldCenter = transform.position;
+
+        character.OnMove += (Vector3 position) => { if (swarmBrain.target == swarmBrain.Character) FlowField.Instance.GeneratePathTo(position); };
 
         for (int i = 0; i < agentCount; ++i)
         {
@@ -55,8 +59,10 @@ public class AgentsManager : MonoBehaviour
     {
         int agentCount = agents.Count;
 
-        if (Input.GetKeyDown(KeyCode.T))
-            FlowField.Instance.GeneratePathTo(swarmBrain.target.position);
+        if (Input.GetKeyDown(KeyCode.Escape))
+            Application.Quit();
+        /*if (Input.GetKeyDown(KeyCode.T))
+            FlowField.Instance.GeneratePathTo(swarmBrain.target.position);*/
 
         if (Input.GetKeyDown(KeyCode.Space))
         {

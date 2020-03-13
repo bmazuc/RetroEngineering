@@ -165,7 +165,7 @@ public class Agent : MonoBehaviour
 
         velocity.y = 0f;
         transform.position += velocity * Time.deltaTime;
-        if (!isDetecting)
+        if (!isDetecting && velocity.magnitude > 0f)
             transform.rotation = Quaternion.LookRotation(velocity.normalized, Vector3.up);
 
         velocity += acceleration * Time.deltaTime;

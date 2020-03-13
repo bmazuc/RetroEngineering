@@ -8,7 +8,6 @@ public class Character : MonoBehaviour
     CharacterController controller;
     [SerializeField] private float speed = 6f;
     Vector3 moveDirection;
-
     public delegate void MovementDelegate(Vector3 position);
     public MovementDelegate OnMove;
 
@@ -16,7 +15,7 @@ public class Character : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        OnMove += FlowField.Instance.GeneratePathTo;
+        //OnMove += FlowField.Instance.GeneratePathTo;
     }
 
     // Update is called once per frame

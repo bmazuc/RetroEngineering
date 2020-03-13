@@ -139,7 +139,7 @@ public class Grid
         center = new Vector3(cell.position.x + gridPosition.x, yOffset, cell.position.z + gridPosition.z);
         style.normal.textColor = color;
         style.fontSize = fontSize;
-        Handles.Label(center, cell.position.x + "  " + cell.position.z, style);
+        //Handles.Label(center, cell.position.x + "  " + cell.position.z, style);
     }
 
     public void DrawDistance(Cell cell, Color color, int fontSize)
@@ -150,7 +150,7 @@ public class Grid
         center = new Vector3(cell.position.x + gridPosition.x, yOffset, cell.position.z + gridPosition.z);
         style.normal.textColor = color;
         style.fontSize = fontSize;
-        Handles.Label(center, cell.distance.ToString(), style);
+        //Handles.Label(center, cell.distance.ToString(), style);
     }
 
     public void DrawDirection(Cell cell, Color color)
